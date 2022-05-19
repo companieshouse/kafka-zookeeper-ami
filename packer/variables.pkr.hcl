@@ -40,7 +40,7 @@ variable "aws_subnet_filter_name" {
 
 variable "configuration_group" {
   type        = string
-  default     = "kafka-zookeeper"
+  default     = "kafka_zookeeper"
   description = "The name of the group to which to add the instance for configuration purposes"
 }
 

@@ -1,0 +1,9 @@
+---
+
+cmak_home: "{{ cmak_install_directory }}/cmak"
+cmak_install_directory: /opt
+cmak_service_group: cmak
+cmak_service_user: cmak
+cmak_sha512: "3eab559918a45d966cccb2f71977d5d636b9386a6eba5c22ae1af5708e50f0c56c3133b5dc0352d62cc88b35cf986d861391547745d7db643d9435fa5cb114e5"
+cmak_timezone: Europe/London
+cmak_version: 3.0.0.6

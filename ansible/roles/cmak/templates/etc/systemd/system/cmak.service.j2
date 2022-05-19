@@ -1,0 +1,15 @@
+[Unit]
+Description=Cluster Manager for Apache Kafka Daemon
+Documentation=https://github.com/yahoo/CMAK
+Requires=network.target
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ cmak_home }}
+User={{ cmak_service_user }}
+Group={{ cmak_service_group }}
+ExecStart={{ cmak_home }}/bin/cmak
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,92 @@
+---
+
+- name: Create {{ cmak_service_group }} system group
+  group:
+    name: "{{ cmak_service_group }}"
+    state: present
+    system: yes
+
+- name: Create {{ cmak_service_user }} system user
+  user:
+    name: "{{ cmak_service_user }}"
+    shell: /bin/bash
+    groups: "{{ cmak_service_user }}"
+    system: yes
+
+- name: Create temporary directory...
+  tempfile:
+    state: directory
+  register: temp_dir
+
+- name: Created
+  ansible.builtin.debug:
+    msg: "{{ temp_dir.path }}"
+
+- name: "Download cmak-{{ cmak_version }}.zip"
+  get_url:
+    url: "{{ download_url }}/cmak-{{ cmak_version }}.zip"
+    dest: "{{ temp_dir.path }}"
+    mode: 0600
+    checksum: "sha512:{{ cmak_sha512 }}"
+  with_items:
+    - "https://github.com/yahoo/CMAK/releases/download/{{ cmak_version }}"
+  loop_control:
+    loop_var: download_url
+
+- name: Extract cmak binary package
+  unarchive:
+    remote_src: yes
+    src: "{{ temp_dir.path }}/cmak-{{ cmak_version }}.zip"
+    dest: "{{ temp_dir.path }}"
+
+- name: Install cmak
+  copy:
+    src: "{{ temp_dir.path }}/cmak-{{ cmak_version }}"
+    dest: "{{ cmak_install_directory }}"
+    owner: "{{ cmak_service_user }}"
+    group: "{{ cmak_service_group }}"
+    remote_src: yes
+    mode: 0755
+
+- name: Create a symbolic link
+  ansible.builtin.file:
+    src: "{{ cmak_install_directory }}/cmak-{{ cmak_version }}"
+    dest: "{{ cmak_home }}"
+    owner: "{{ cmak_service_user }}"
+    group: "{{ cmak_service_group }}"
+    state: link
+
+- name: Delete temporary directory...
+  file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+
+- name: Deleted
+  ansible.builtin.debug:
+    msg: "{{ temp_dir.path }}"
+
+- name: Configure cmak
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "/{{ item.path }}"
+    owner: "{{ cmak_service_user }}"
+    group: "{{ cmak_service_group }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - path: "opt/cmak/conf/application.conf"
+      mode: '0644'
+
+- name: Configure cmak service
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  with_items:
+    - "etc/systemd/system/cmak.service"
+
+- name: Disable the cmak service
+  service:
+    name: cmak
+    enabled: no
